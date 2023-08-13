@@ -22,8 +22,18 @@ def find_post(id):
         if p['id']==id:
             return p
         
-@app.get("/")
-async def root():
+
+def find_index_post(id):
+    for i,p in enumerate(my_posts):
+        if p['id']==id:
+            return i
+        
+        
+
+        
+ #http method       # path
+@app.get("/") # decorator have app which contain fastapi instance 
+async def root(): # async is not necessary
     return {"message": "Hello !"}
 
 # Read Operations
@@ -35,20 +45,38 @@ def get_post():
 @app.post("/post", status_code=status.HTTP_201_CREATED)
 def creat_post(new_post : Post):
     post_dict=new_post.dict()
-    post_dict['id']=randrange(0,1000000000)
+    post_dict['id']=randrange(0,1000000000) # give unique id
     my_posts.append(post_dict)
     return {"data": new_post}
 
+
+
+# Latest post
+@app.get('/post/latest')   
+def get_latest():
+    post = my_posts[len(my_posts)-1]
+    return {"post_details": post}
+
+
 # Read Operations by ID
-@app.get('/post/id/{id}')
-def get_post(id: int): 
+@app.get('/post/{id}')
+def get_post(id: int): #convert id into an integer
+# def get_post(id: int,response: Response):
     post= find_post(id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No such post")
     return {"post_details": post}
 
-# Latest post
-@app.get('/post/latest')
-def get_latest():
-    post = my_posts[len(my_posts)-1]
-    return {"post_details": post}
+
+"""here is an issue that when we are going to post/latest then it took latest as id and run get_post 
+solution is that I have to get_latest function before get_post function....
+"""
+
+@app.delete('/posts/{id}',status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id:int):
+    #delete post
+    #find the index in the array that has required ID
+    #my post_index id              
+    index=find_index_post(id)
+    my_posts.pop(index)
+    return {'message':'post was deleted successfully 204'}
